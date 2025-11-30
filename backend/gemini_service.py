@@ -72,6 +72,7 @@ class GeminiService:
             Create {count} trivia questions about: "{input_text}".
             
             Prioritize interesting and unusual facts over common knowledge.
+            Create in Bahasa Indonesia.
             """
         # elif mode == "context":
         #     prompt = f"""
