@@ -12,6 +12,7 @@ class Player(BaseModel):
     is_host: bool = False
     is_connected: bool = True
     has_answered: bool = False
+    current_answer: Optional[int] = None
 
 class Question(BaseModel):
     question: str
@@ -67,29 +68,31 @@ class GameLobby:
             del self.players[player_id]
             # Logic to reassign host could go here
 
-    def submit_answer(self, player_id: str, answer_index: int) -> bool:
-        """Records answer but checks if round is complete"""
+    def submit_answer(self, player_id: str, answer_index: int):
+        """Just records the answer. No scoring yet."""
         if self.state != GameState.PLAYING:
-            return False
+            return
         
         player = self.players[player_id]
-        if player.has_answered:
-            return False # Prevent double answers
-
         player.has_answered = True
-        
+        player.current_answer = answer_index 
+
+    def calculate_scores(self):
+        """Called once at the end of the round to update scores"""
         current_q = self.questions[self.current_question_index]
         
-        # Determine correct index safely
+        # Get correct index safely
         if isinstance(current_q, dict):
             correct_idx = current_q.get('correct_index')
         else:
             correct_idx = current_q.correct_index
+
+        for player in self.players.values():
+            if player.current_answer == correct_idx:
+                player.score += 10
             
-        if answer_index == correct_idx:
-            player.score += 10
-            return True
-        return False
+            # Reset their round data for safety
+            player.current_answer = None
     
     def check_all_answered(self) -> bool:
         """Returns True if all CONNECTED players have answered"""

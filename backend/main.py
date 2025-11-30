@@ -161,11 +161,11 @@ async def websocket_endpoint(websocket: WebSocket, room_code: str, player_name: 
 
             elif action == "SUBMIT_ANSWER":
                 answer_index = payload.get("index")
-                is_correct = game.submit_answer(player_id, answer_index)
+                game.submit_answer(player_id, answer_index)
                 
                 await websocket.send_json({
                     "type": "ANSWER_ACK",
-                    "correct": is_correct 
+                    "correct": None 
                 })
 
                 await manager.broadcast({
@@ -174,9 +174,10 @@ async def websocket_endpoint(websocket: WebSocket, room_code: str, player_name: 
                 }, room_code)
 
                 if game.check_all_answered():
+                    game.calculate_scores()
                     game.state = GameState.REVEAL
                     
-                    # SECURE BROADCAST: Now we send the answer key
+                    # Now we send the answer key
                     current_q_obj = game.questions[game.current_question_index]
                     full_data = get_full_question(current_q_obj)
                     

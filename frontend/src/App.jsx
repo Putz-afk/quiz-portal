@@ -498,6 +498,12 @@ const styles = {
   },
   title: { margin: '0 0 10px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, color: '#333' },
   subtitle: { margin: '0 0 20px 0', color: '#666' },
+  waitingText: { 
+    color: '#333', 
+    fontSize: '16px', 
+    marginTop: 20, 
+    fontStyle: 'italic' 
+  },
   input: { width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ddd', marginBottom: '10px', fontSize: '16px', boxSizing: 'border-box' },
   smallInput: { width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ddd', marginBottom: '5px', fontSize: '14px', textTransform: 'uppercase', boxSizing: 'border-box' },
   row: { display: 'flex', gap: '10px', marginTop: 10 },
