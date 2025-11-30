@@ -3,14 +3,15 @@ import { Trophy, Users, Zap, AlertCircle, CheckCircle, XCircle, ArrowRight, Wifi
 
 // --- CONFIGURATION ---
 
-// SMART URL DETECTION (LAN PARTY MODE):
-// This automatically grabs the IP address from your browser's address bar.
-// If you are on localhost, it uses localhost.
-// If you are on 192.168.1.5, it uses 192.168.1.5.
-const PROTOCOL = window.location.protocol; // http: or https:
-const HOSTNAME = window.location.hostname; // localhost or 192.168.x.x
-const API_URL = `${PROTOCOL}//${HOSTNAME}:8000`;
-const WS_URL = `ws://${HOSTNAME}:8000/ws`;
+// 1. FOR DEPLOYMENT (VERCEL): 
+// Uncomment the line below when you deploy to Vercel so it can find your backend.
+// const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+
+// 2. FOR LOCAL DEVELOPMENT / PREVIEW / LAN PARTY:
+const API_URL = "http://127.0.0.1:8000";
+
+// Handle WebSocket URL protocol (ws:// vs wss://) automatically
+const WS_URL = API_URL.replace(/^http/, 'ws') + "/ws";
 
 export default function App() {
   const [view, setView] = useState('login'); 
@@ -27,15 +28,11 @@ export default function App() {
   
   // Game State Logic
   const [hasSubmitted, setHasSubmitted] = useState(false);
-  const [revealResult, setRevealResult] = useState(null); // null or { correct: bool }
+  const [revealResult, setRevealResult] = useState(null); 
   const [myScore, setMyScore] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null); 
 
   const socketRef = useRef(null);
-
-  useEffect(() => {
-    document.title = 'QuizPortal';
-  }, []);
 
   const createRoom = async () => {
     if (!playerName) return setError("Please enter your name");
@@ -43,7 +40,6 @@ export default function App() {
       const res = await fetch(`${API_URL}/create-room`, { method: 'POST' });
       const data = await res.json();
       setRoomCode(data.room_code);
-      // Host status will be confirmed by websocket
       connectToGame(data.room_code, playerName);
     } catch (err) {
       console.error(err);
@@ -94,7 +90,6 @@ export default function App() {
 
       case 'STATUS_UPDATE':
         setGameState(data.state);
-        // FORCE VIEW SWITCH if state goes back to WAITING (Lobby)
         if (data.state === 'WAITING') {
            setView('lobby');
            setRevealResult(null);
@@ -116,9 +111,10 @@ export default function App() {
         break;
 
       case 'ANSWER_ACK':
-        // Server acknowledges we submitted. Wait for REVEAL.
         setHasSubmitted(true);
-        // We temporarily store the correctness, but don't show it yet
+        // Note: data.correct might be null here if we want extra security, 
+        // but for now we trust the client logic to hide it until reveal.
+        // If you want 100% security, the server shouldn't send 'correct' here either.
         setRevealResult({ correct: data.correct });
         break;
 
@@ -126,6 +122,16 @@ export default function App() {
         setGameState('REVEAL');
         setPlayers(data.players);
         updateMyStatus(data.players);
+        
+        // --- SECURITY UPDATE: Merge the answer key into the question ---
+        setCurrentQuestion(prev => {
+            if (!prev) return prev;
+            return {
+                ...prev,
+                correct_index: data.correct_index,
+                explanation: data.explanation
+            };
+        });
         break;
         
       case 'GAME_OVER':
@@ -143,7 +149,7 @@ export default function App() {
     const me = playerList.find(p => p.name === playerName);
     if (me) {
       setMyScore(me.score);
-      setIsHost(me.is_host); // Auto-update host status (Migration logic)
+      setIsHost(me.is_host);
     }
   };
 

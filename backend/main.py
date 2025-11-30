@@ -2,7 +2,7 @@ import os
 import asyncio
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from typing import List, Dict
+from typing import List, Dict, Union
 import json
 
 from .game_engine import GameManager, GameState
@@ -45,6 +45,26 @@ class ConnectionManager:
 
 manager = ConnectionManager()
 
+# --- SECURITY HELPER ---
+def get_public_question(q: Union[dict, object]) -> dict:
+    """Removes the answer key from the question object"""
+    # Handle Pydantic model or Dict
+    if hasattr(q, "dict"): 
+        q = q.dict()
+    
+    return {
+        "question": q["question"],
+        "options": q["options"],
+        # We deliberately EXCLUDE 'correct_index' and 'explanation'
+    }
+
+def get_full_question(q: Union[dict, object]) -> dict:
+    """Returns everything (used only for REVEAL phase)"""
+    if hasattr(q, "dict"): 
+        q = q.dict()
+    return q
+# -----------------------
+
 @app.get("/")
 def read_root():
     return {"status": "QuizPortal API is running"}
@@ -73,38 +93,43 @@ async def websocket_endpoint(websocket: WebSocket, room_code: str, player_name: 
     
     await manager.connect(websocket, room_code)
     
-    # 1. Broadcast Join (Standard procedure)
     await manager.broadcast({
         "type": "PLAYER_UPDATE",
         "players": [p.dict() for p in game.players.values()]
     }, room_code)
 
-    # --- THE FIX: CATCH-UP LOGIC ---
-    # If the game is already in progress, manually sync THIS player immediately.
+    # --- CATCH-UP LOGIC (SECURED) ---
     if game.state in [GameState.PLAYING, GameState.REVEAL]:
-        # A. Send them the current question so they leave the lobby
         current_q = game.questions[game.current_question_index]
+        
+        # If REVEAL, send everything. If PLAYING, send only public data.
+        if game.state == GameState.REVEAL:
+            question_payload = get_full_question(current_q)
+        else:
+            question_payload = get_public_question(current_q)
+
         await websocket.send_json({
             "type": "NEW_QUESTION",
-            "question": current_q,
+            "question": question_payload,
             "index": game.current_question_index,
             "total": len(game.questions)
         })
 
-        # B. Restore their personal state (Did they already answer?)
         player = game.players.get(player_id)
         if player and player.has_answered:
-            # Send an ACK so their frontend knows to lock the buttons
             await websocket.send_json({
                 "type": "ANSWER_ACK",
-                "correct": None # Don't reveal yet, just lock UI
+                "correct": None 
             })
 
-        # C. If the round is already over (Reveal phase), show them the answer
         if game.state == GameState.REVEAL:
+             # If reconnecting during reveal, send the answer key immediately
+             full_q_data = get_full_question(current_q)
              await websocket.send_json({
                 "type": "ROUND_REVEAL",
-                "players": [p.dict() for p in game.players.values()]
+                "players": [p.dict() for p in game.players.values()],
+                "correct_index": full_q_data['correct_index'],
+                "explanation": full_q_data.get('explanation', '')
             })
 
     try:
@@ -123,13 +148,13 @@ async def websocket_endpoint(websocket: WebSocket, room_code: str, player_name: 
                 game.questions = questions
                 game.state = GameState.PLAYING
                 
-                # Reset answers for safety
                 for p in game.players.values(): p.has_answered = False
 
                 if questions:
+                    # SECURE BROADCAST: Use public question only
                     await manager.broadcast({
                         "type": "NEW_QUESTION",
-                        "question": questions[0],
+                        "question": get_public_question(questions[0]), 
                         "index": 0,
                         "total": len(questions)
                     }, room_code)
@@ -138,38 +163,42 @@ async def websocket_endpoint(websocket: WebSocket, room_code: str, player_name: 
                 answer_index = payload.get("index")
                 is_correct = game.submit_answer(player_id, answer_index)
                 
-                # 1. Send immediate ack to THIS player only
                 await websocket.send_json({
                     "type": "ANSWER_ACK",
                     "correct": is_correct 
                 })
 
-                # 2. Broadcast updated player list 
                 await manager.broadcast({
                     "type": "PLAYER_UPDATE",
                     "players": [p.dict() for p in game.players.values()]
                 }, room_code)
 
-                # 3. Check if EVERYONE is done
                 if game.check_all_answered():
                     game.state = GameState.REVEAL
+                    
+                    # SECURE BROADCAST: Now we send the answer key
+                    current_q_obj = game.questions[game.current_question_index]
+                    full_data = get_full_question(current_q_obj)
+                    
                     await manager.broadcast({
                         "type": "ROUND_REVEAL",
-                        "players": [p.dict() for p in game.players.values()]
+                        "players": [p.dict() for p in game.players.values()],
+                        "correct_index": full_data['correct_index'],
+                        "explanation": full_data.get('explanation', '')
                     }, room_code)
 
             elif action == "NEXT_QUESTION":
                 next_q = game.next_question()
                 if next_q:
                     game.state = GameState.PLAYING
+                    # SECURE BROADCAST
                     await manager.broadcast({
                         "type": "NEW_QUESTION",
-                        "question": next_q,
+                        "question": get_public_question(next_q),
                         "index": game.current_question_index,
                         "total": len(game.questions)
                     }, room_code)
                     
-                    # Refresh player list to remove checkmarks
                     await manager.broadcast({
                         "type": "PLAYER_UPDATE",
                         "players": [p.dict() for p in game.players.values()]
@@ -181,23 +210,18 @@ async def websocket_endpoint(websocket: WebSocket, room_code: str, player_name: 
                     }, room_code)
             
             elif action == "RESET_LOBBY":
-                # Reset game state for a new round
                 game.state = GameState.WAITING
                 game.questions = []
                 game.current_question_index = 0
-                
-                # Reset player scores and flags
                 for p in game.players.values():
                     p.score = 0
                     p.has_answered = False
                 
-                # Notify everyone to go to Lobby
                 await manager.broadcast({
                     "type": "STATUS_UPDATE",
                     "state": "WAITING"
                 }, room_code)
 
-                # Update player list (scores reset to 0)
                 await manager.broadcast({
                     "type": "PLAYER_UPDATE",
                     "players": [p.dict() for p in game.players.values()]
@@ -207,18 +231,21 @@ async def websocket_endpoint(websocket: WebSocket, room_code: str, player_name: 
         manager.disconnect(websocket, room_code)
         game.handle_disconnect(player_id)
         
-        # Broadcast the disconnect AND the potential new host
         await manager.broadcast({
             "type": "PLAYER_UPDATE",
             "players": [p.dict() for p in game.players.values()]
         }, room_code)
         
-        # EDGE CASE CHECK:
-        # If the person who left was the ONLY one holding up the game,
-        # we must check if we should proceed to REVEAL immediately.
         if game.state == GameState.PLAYING and game.check_all_answered():
             game.state = GameState.REVEAL
+            
+            # EDGE CASE: Secure reveal on disconnect
+            current_q_obj = game.questions[game.current_question_index]
+            full_data = get_full_question(current_q_obj)
+
             await manager.broadcast({
                 "type": "ROUND_REVEAL",
-                "players": [p.dict() for p in game.players.values()]
+                "players": [p.dict() for p in game.players.values()],
+                "correct_index": full_data['correct_index'],
+                "explanation": full_data.get('explanation', '')
             }, room_code)
