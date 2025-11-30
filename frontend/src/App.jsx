@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Trophy, Users, Zap, AlertCircle, CheckCircle, XCircle, ArrowRight, WifiOff, Crown, Medal, RefreshCw } from 'lucide-react';
+import { Trophy, Users, Zap, AlertCircle, CheckCircle, XCircle, ArrowRight, WifiOff, Crown, Medal, RefreshCw, Copy } from 'lucide-react';
 
 // --- CONFIGURATION ---
 
@@ -14,6 +14,10 @@ const API_URL = "http://127.0.0.1:8000";
 const WS_URL = API_URL.replace(/^http/, 'ws') + "/ws";
 
 export default function App() {
+  useEffect(() => {
+    document.title = 'QuizPortal';
+  }, []);
+
   const [view, setView] = useState('login'); 
   const [playerName, setPlayerName] = useState('');
   const [roomCode, setRoomCode] = useState('');
@@ -21,6 +25,9 @@ export default function App() {
   const [players, setPlayers] = useState([]);
   const [error, setError] = useState('');
   const [gameState, setGameState] = useState('WAITING'); 
+  
+  // Copy Button State
+  const [copied, setCopied] = useState(false);
 
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [qIndex, setQIndex] = useState(0);
@@ -184,6 +191,19 @@ export default function App() {
     }));
   };
 
+  const copyRoomCode = () => {
+    // Fallback copy method for iframes/older browsers
+    const textArea = document.createElement("textarea");
+    textArea.value = roomCode;
+    document.body.appendChild(textArea);
+    textArea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textArea);
+    
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   // --- Render Helpers ---
 
   const renderPlayerStrip = () => (
@@ -249,7 +269,12 @@ export default function App() {
       <div style={styles.container}>
         <div style={styles.card}>
           <div style={styles.header}>
-            <h2 style={styles.heading}>Room: {roomCode}</h2>
+            <h2 style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, margin: '0 0 10px 0', color: '#333'}}>
+              Room: {roomCode}
+              <button onClick={copyRoomCode} style={styles.copyBtn} title="Copy Code">
+                {copied ? <CheckCircle size={22} color="#10b981" /> : <Copy size={22} color="#666" />}
+              </button>
+            </h2>
             <span style={styles.badge}>{players.length} Players</span>
           </div>
           
@@ -445,8 +470,22 @@ export default function App() {
 
 const styles = {
   container: {
-    minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', fontFamily: 'sans-serif', padding: 20
+    // FIX: Using fixed positioning to force full viewport coverage
+    // This overrides any default margins or flex behaviors from Vite's index.css
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    width: '100vw',
+    height: '100vh',
+    overflowY: 'auto', // Allow scrolling on smaller screens
+    
+    display: 'flex', 
+    alignItems: 'center', 
+    justifyContent: 'center',
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+    fontFamily: 'sans-serif', 
+    padding: 20,
+    boxSizing: 'border-box' 
   },
   card: {
     background: 'white', padding: '2rem', borderRadius: '16px', boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
@@ -454,7 +493,8 @@ const styles = {
   },
   gameCard: {
     background: 'white', padding: '2rem', borderRadius: '16px', boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
-    width: '100%', maxWidth: '600px'
+    width: '100%', maxWidth: '600px',
+    textAlign: 'center' 
   },
   title: { margin: '0 0 10px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, color: '#333' },
   subtitle: { margin: '0 0 20px 0', color: '#666' },
@@ -466,6 +506,7 @@ const styles = {
   secondaryBtn: { background: '#f3f4f6', color: '#333', border: 'none', padding: '12px', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', width: '100%' },
   actionBtn: { width: '100%', background: '#764ba2', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', cursor: 'pointer', fontSize: '16px', marginTop: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' },
   nextBtn: { background: '#333', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '20px', cursor: 'pointer', marginTop: 10, display: 'inline-flex', alignItems: 'center', gap: 8 },
+  copyBtn: { background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center', borderRadius: '50%', transition: 'background 0.2s', },
   error: { color: 'red', fontSize: '14px', display: 'flex', alignItems: 'center', gap: 5, justifyContent: 'center', marginTop: 10 },
   playerList: { textAlign: 'left', marginTop: 20, marginBottom: 20 },
   playerRow: { padding: '8px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 },
