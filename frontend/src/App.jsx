@@ -489,7 +489,7 @@ const styles = {
   },
   card: {
     background: 'white', padding: '2rem', borderRadius: '16px', boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
-    width: '100%', maxWidth: '400px', textAlign: 'center'
+    width: '100%', maxWidth: '400px', textAlign: 'center', color: '#333'
   },
   gameCard: {
     background: 'white', padding: '2rem', borderRadius: '16px', boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
@@ -504,8 +504,8 @@ const styles = {
     marginTop: 20, 
     fontStyle: 'italic' 
   },
-  input: { width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ddd', marginBottom: '10px', fontSize: '16px', boxSizing: 'border-box' },
-  smallInput: { width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ddd', marginBottom: '5px', fontSize: '14px', textTransform: 'uppercase', boxSizing: 'border-box' },
+  input: { background: '#fff', color: '#333', width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ddd', marginBottom: '10px', fontSize: '16px', boxSizing: 'border-box' },
+  smallInput: { background: '#fff', color: '#333', width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ddd', marginBottom: '5px', fontSize: '14px', textTransform: 'uppercase', boxSizing: 'border-box' },
   row: { display: 'flex', gap: '10px', marginTop: 10 },
   col: { display: 'flex', flexDirection: 'column', flex: 1 },
   primaryBtn: { flex: 1, background: '#667eea', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', cursor: 'pointer', fontSize: '16px', fontWeight: 'bold' },
@@ -515,7 +515,7 @@ const styles = {
   copyBtn: { background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center', borderRadius: '50%', transition: 'background 0.2s', },
   error: { color: 'red', fontSize: '14px', display: 'flex', alignItems: 'center', gap: 5, justifyContent: 'center', marginTop: 10 },
   playerList: { textAlign: 'left', marginTop: 20, marginBottom: 20 },
-  playerRow: { padding: '8px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 },
+  playerRow: { color: '#333', padding: '8px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 },
   offlineTag: { fontSize: 12, color: 'red', fontWeight: 'bold' },
   spinner: { width: 24, height: 24, border: '3px solid #f3f3f3', borderTop: '3px solid #3498db', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' },
   gameHeader: { display: 'flex', justifyContent: 'space-between', marginBottom: 20, color: '#888', fontWeight: 'bold' },
