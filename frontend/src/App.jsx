@@ -3,14 +3,14 @@ import { Trophy, Users, Zap, AlertCircle, CheckCircle, XCircle, ArrowRight, Wifi
 
 // --- CONFIGURATION ---
 
-// 1. FOR DEPLOYMENT (VERCEL): 
-// Uncomment the line below when you deploy to Vercel so it can find your backend.
-// const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
-
-// 2. FOR LOCAL DEVELOPMENT / PREVIEW / LAN PARTY:
-const API_URL = "http://127.0.0.1:8000";
+// 1. PUBLIC TUNNEL (NGROK):
+// Paste your Ngrok URL here. It changes every time you restart Ngrok!
+// IMPORTANT: Do NOT include the trailing slash '/'.
+// Example: "https://a1b2-c3d4.ngrok-free.app"
+const API_URL = "https://lady-unexcogitative-supremely.ngrok-free.dev";
 
 // Handle WebSocket URL protocol (ws:// vs wss://) automatically
+// Note: Ngrok uses wss (secure), so we replace http with wss
 const WS_URL = API_URL.replace(/^http/, 'ws') + "/ws";
 
 export default function App() {
