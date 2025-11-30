@@ -71,17 +71,14 @@ class GeminiService:
             {schema_instruction}
             Create {count} trivia questions about: "{input_text}".
             
-            Please follow these specific themes for each question to ensure variety:
-            {flavor_instructions}
-            
-            Avoid common clichés (like 'tomatoes are fruits' or 'bananas are berries') unless they are rare variations.
+            Prioritize interesting and unusual facts over common knowledge.
             """
-        elif mode == "context":
-            prompt = f"""
-            {schema_instruction}
-            Create {count} questions based STRICTLY on this text:
-            {input_text}
-            """
+        # elif mode == "context":
+        #     prompt = f"""
+        #     {schema_instruction}
+        #     Create {count} questions based STRICTLY on this text:
+        #     {input_text}
+        #     """
         else:
             return []
 
