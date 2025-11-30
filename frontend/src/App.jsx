@@ -3,16 +3,14 @@ import { Trophy, Users, Zap, AlertCircle, CheckCircle, XCircle, ArrowRight, Wifi
 
 // --- CONFIGURATION ---
 
-// 1. FOR DEPLOYMENT (VERCEL): 
-// Uncomment the line below when you deploy to Vercel so it can find your backend.
-// const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
-
-// 2. FOR LOCAL DEVELOPMENT / PREVIEW:
-// We use this strictly for now to avoid compilation errors in the preview window.
-const API_URL = "http://127.0.0.1:8000";
-
-// Handle WebSocket URL protocol (ws:// vs wss://) automatically
-const WS_URL = API_URL.replace(/^http/, 'ws') + "/ws";
+// SMART URL DETECTION (LAN PARTY MODE):
+// This automatically grabs the IP address from your browser's address bar.
+// If you are on localhost, it uses localhost.
+// If you are on 192.168.1.5, it uses 192.168.1.5.
+const PROTOCOL = window.location.protocol; // http: or https:
+const HOSTNAME = window.location.hostname; // localhost or 192.168.x.x
+const API_URL = `${PROTOCOL}//${HOSTNAME}:8000`;
+const WS_URL = `ws://${HOSTNAME}:8000/ws`;
 
 export default function App() {
   const [view, setView] = useState('login'); 
@@ -34,6 +32,10 @@ export default function App() {
   const [selectedOption, setSelectedOption] = useState(null); 
 
   const socketRef = useRef(null);
+
+  useEffect(() => {
+    document.title = 'QuizPortal';
+  }, []);
 
   const createRoom = async () => {
     if (!playerName) return setError("Please enter your name");
