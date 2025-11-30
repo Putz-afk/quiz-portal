@@ -6,6 +6,7 @@ import random  # Added for randomness
 import google.generativeai as genai
 from typing import List, Dict, Any
 from dotenv import load_dotenv
+import uuid
 
 load_dotenv()
 
@@ -16,9 +17,9 @@ if GOOGLE_API_KEY:
 class GeminiService:
     def __init__(self):
         # 'gemini-2.5-flash' is good, dont change this.
-        self.model = genai.GenerativeModel('gemini-2.5-flash') 
+        self.model = genai.GenerativeModel('gemini-2.5-flash-lite') 
         self.last_request_time = 0
-        self.min_interval = 2.0 
+        self.min_interval = 14/60 # 14 requests per minute
 
     async def generate_questions(self, mode: str, input_text: str, count: int = 10) -> List[Dict[str, Any]]:
         # --- RATE LIMITER ---
@@ -32,27 +33,6 @@ class GeminiService:
         
         self.last_request_time = time.time()
 
-        # --- RANDOMNESS INJECTION (Updated) ---
-        # Now we assign a specific flavor to EACH question individually
-        sub_themes = [
-            "obscure and lesser-known facts",
-            "historical origins and etymology",
-            "scientific properties and biology",
-            "cultural significance and myths",
-            "record-breaking statistics",
-            "surprising misconceptions",
-            "weird and wacky details",
-            "modern uses and economics",
-            "famous events or pop culture references"
-        ]
-        
-        # Generate a list of instructions: "Question 1: History", "Question 2: Science", etc.
-        flavor_instructions = "\n".join(
-            [f"- Question {i+1}: Focus on {random.choice(sub_themes)}" for i in range(count)]
-        )
-        
-        print(f"DEBUG: Sending prompt for topic: {input_text} with mixed flavors")
-        
         schema_instruction = """
         You are a quiz engine. Output valid JSON only. 
         Format:
@@ -66,20 +46,33 @@ class GeminiService:
         ]
         """
 
+        # --- RANDOMNESS INJECTION ---
+        difficulty_variations = ["elementary student", "high schooler", "college level", "expert level", "mixed difficulty"]
+        perspectives = ["historical", "scientific", "cultural", "technical", "fun facts"]
+
+        dynamic_guidelines = [
+            f"Mix difficulty levels: {', '.join(random.sample(difficulty_variations, 2))}",
+            f"Focus on {random.choice(perspectives)} perspective",
+            f"Include questions about both well-known and obscure aspects",
+            f"Vary the option lengths and structures significantly",
+            f"Unique request ID: {uuid.uuid4()}"
+        ]
+
+        selected_guidelines = random.sample(dynamic_guidelines, 3)
+
         if mode == "topic":
             prompt = f"""
-            {schema_instruction}
-            Create {count} trivia questions about: "{input_text}".
-            
-            Prioritize interesting and unusual facts over common knowledge.
-            Create in Bahasa Indonesia.
-            """
-        # elif mode == "context":
-        #     prompt = f"""
-        #     {schema_instruction}
-        #     Create {count} questions based STRICTLY on this text:
-        #     {input_text}
-        #     """
+                {schema_instruction}
+                Create {count} diverse trivia questions about: "{input_text}".
+                
+                Guidelines:
+                1. Language: Strictly in **Bahasa Indonesia**
+                2. Content: Prioritize interesting, unusual, and fun facts
+                3. {selected_guidelines[0]}
+                4. {selected_guidelines[1]}
+                5. {selected_guidelines[2]}
+                6. Ensure questions don't overlap in content or approach
+                """
         else:
             return []
 
