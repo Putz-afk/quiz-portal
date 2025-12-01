@@ -37,7 +37,8 @@ export default function App() {
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [revealResult, setRevealResult] = useState(null); 
   const [myScore, setMyScore] = useState(0);
-  const [selectedOption, setSelectedOption] = useState(null); 
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [submittedAnswer, setSubmittedAnswer] = useState(null); // Track submitted answer for reveal 
 
   const socketRef = useRef(null);
 
@@ -114,7 +115,8 @@ export default function App() {
         // Reset per-question state
         setHasSubmitted(false);
         setRevealResult(null);
-        setSelectedOption(null); 
+        setSelectedOption(null);
+        setSubmittedAnswer(null);
         break;
 
       case 'ANSWER_ACK':
@@ -137,8 +139,8 @@ export default function App() {
             };
         });
         
-        // Now calculate if player's answer was correct
-        setRevealResult({ correct: selectedOption === data.correct_index });
+        // Now calculate if player's answer was correct using the stored submitted answer
+        setRevealResult({ correct: submittedAnswer === data.correct_index });
         break;
         
       case 'GAME_OVER':
@@ -171,6 +173,7 @@ export default function App() {
   const submitAnswer = (index) => {
     if (hasSubmitted) return; 
     setSelectedOption(index);
+    setSubmittedAnswer(index); // Store for reveal
     socketRef.current.send(JSON.stringify({
       action: "SUBMIT_ANSWER",
       payload: { index }
