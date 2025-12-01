@@ -131,13 +131,6 @@ export default function App() {
         setPlayers(data.players);
         updateMyStatus(data.players);
         
-        // DEBUG
-        console.log('ROUND_REVEAL received:', {
-          submittedAnswer: submittedAnswerRef.current,
-          correct_index: data.correct_index,
-          isCorrect: submittedAnswerRef.current === data.correct_index
-        });
-        
         // --- SECURITY UPDATE: Merge the answer key into the question ---
         setCurrentQuestion(prev => {
             if (!prev) return prev;
@@ -181,7 +174,6 @@ export default function App() {
 
   const submitAnswer = (index) => {
     if (hasSubmitted) return; 
-    console.log('Submitting answer:', index);
     setSelectedOption(index);
     setSubmittedAnswer(index); // Store for reveal
     submittedAnswerRef.current = index; // Also store in ref to avoid closure issues
