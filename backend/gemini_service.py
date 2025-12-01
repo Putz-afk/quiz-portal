@@ -17,9 +17,39 @@ if GOOGLE_API_KEY:
 class GeminiService:
     def __init__(self):
         # 'gemini-2.5-flash' is good, dont change this.
-        self.model = genai.GenerativeModel('gemini-2.5-flash-lite') 
+        self.model = genai.GenerativeModel('gemini-2.5-flash') 
         self.last_request_time = 0
         self.min_interval = 14/60 # 14 requests per minute
+
+    def _shuffle_answers(self, questions: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Shuffle answer positions in each question to randomize correct_index"""
+        shuffled_questions = []
+        
+        for q in questions:
+            # Get the correct answer
+            correct_index = q.get('correct_index', 0)
+            options = q.get('options', [])
+            
+            if correct_index >= len(options):
+                correct_index = 0
+            
+            correct_answer = options[correct_index]
+            
+            # Shuffle all options
+            shuffled_options = options.copy()
+            random.shuffle(shuffled_options)
+            
+            # Find the new position of the correct answer
+            new_correct_index = shuffled_options.index(correct_answer)
+            
+            # Update question with shuffled data
+            shuffled_q = q.copy()
+            shuffled_q['options'] = shuffled_options
+            shuffled_q['correct_index'] = new_correct_index
+            
+            shuffled_questions.append(shuffled_q)
+        
+        return shuffled_questions
 
     async def generate_questions(self, mode: str, input_text: str, count: int = 10) -> List[Dict[str, Any]]:
         # --- RATE LIMITER ---
@@ -36,23 +66,21 @@ class GeminiService:
         schema_instruction = """
         You are a quiz engine. Output valid JSON only. 
         
-        CRITICAL: You MUST shuffle the correct answer to random positions.
-        The "correct_index" must point to DIFFERENT positions in different questions (0, 1, 2, or 3).
-        Do NOT put the answer at index 0 for every question!
-        
         Format:
         [
             {
                 "question": "The question text",
-                "options": ["Option A", "Option B", "Option C", "Option D"],
-                "correct_index": 1, 
+                "options": ["Correct Answer", "Wrong Option 1", "Wrong Option 2", "Wrong Option 3"],
+                "correct_index": 0, 
                 "explanation": "Brief explanation"
             }
         ]
+        
+        Note: Place the CORRECT answer at index 0. We will shuffle it programmatically.
         """
 
         # --- RANDOMNESS INJECTION ---
-        difficulty_variations = ["elementary student", "high schooler", "college level", "expert level", "mixed difficulty"]
+        difficulty_variations = ["elementary student", "high schooler", "college level", "mixed difficulty"]
         perspectives = ["historical", "scientific", "cultural", "technical", "fun facts"]
 
         dynamic_guidelines = [
@@ -76,8 +104,6 @@ class GeminiService:
                 3. {selected_guidelines[1]}
                 4. {selected_guidelines[2]}
                 5. Ensure questions don't overlap in content or approach
-                6. RANDOMIZE THE ANSWER POSITIONS: Vary the correct_index across all 4 positions (0, 1, 2, 3)
-                7. Do NOT cluster answers at position 0 - spread them evenly across all positions
                 """
         else:
             return []
@@ -95,6 +121,9 @@ class GeminiService:
                 text_response = text_response.replace("```json", "").replace("```", "").strip()
 
             questions = json.loads(text_response)
+            
+            # Shuffle answer positions for each question
+            questions = self._shuffle_answers(questions)
             
             print(f"DEBUG: Successfully parsed {len(questions)} questions.")
             return questions
