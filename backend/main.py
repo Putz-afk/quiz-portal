@@ -62,6 +62,9 @@ def get_full_question(q: Union[dict, object]) -> dict:
     """Returns everything (used only for REVEAL phase)"""
     if hasattr(q, "dict"): 
         q = q.dict()
+    # Ensure all required fields exist
+    if not isinstance(q, dict):
+        return {"question": "", "options": [], "correct_index": 0, "explanation": ""}
     return q
 # -----------------------
 
@@ -178,15 +181,30 @@ async def websocket_endpoint(websocket: WebSocket, room_code: str, player_name: 
                     game.state = GameState.REVEAL
                     
                     # Now we send the answer key
-                    current_q_obj = game.questions[game.current_question_index]
-                    full_data = get_full_question(current_q_obj)
-                    
-                    await manager.broadcast({
-                        "type": "ROUND_REVEAL",
-                        "players": [p.dict() for p in game.players.values()],
-                        "correct_index": full_data['correct_index'],
-                        "explanation": full_data.get('explanation', '')
-                    }, room_code)
+                    try:
+                        current_q_obj = game.questions[game.current_question_index]
+                        full_data = get_full_question(current_q_obj)
+                        
+                        # Ensure required fields exist
+                        correct_index = full_data.get('correct_index')
+                        if correct_index is None:
+                            print(f"ERROR: Question missing correct_index. Question data: {full_data}")
+                            correct_index = 0
+                        
+                        await manager.broadcast({
+                            "type": "ROUND_REVEAL",
+                            "players": [p.dict() for p in game.players.values()],
+                            "correct_index": correct_index,
+                            "explanation": full_data.get('explanation', '')
+                        }, room_code)
+                    except Exception as e:
+                        print(f"ERROR in ROUND_REVEAL: {e}")
+                        await manager.broadcast({
+                            "type": "ROUND_REVEAL",
+                            "players": [p.dict() for p in game.players.values()],
+                            "correct_index": 0,
+                            "explanation": "Error retrieving answer"
+                        }, room_code)
 
             elif action == "NEXT_QUESTION":
                 next_q = game.next_question()

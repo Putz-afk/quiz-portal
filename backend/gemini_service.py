@@ -35,12 +35,17 @@ class GeminiService:
 
         schema_instruction = """
         You are a quiz engine. Output valid JSON only. 
+        
+        CRITICAL: You MUST shuffle the correct answer to random positions.
+        The "correct_index" must point to DIFFERENT positions in different questions (0, 1, 2, or 3).
+        Do NOT put the answer at index 0 for every question!
+        
         Format:
         [
             {
                 "question": "The question text",
                 "options": ["Option A", "Option B", "Option C", "Option D"],
-                "correct_index": 0, 
+                "correct_index": 1, 
                 "explanation": "Brief explanation"
             }
         ]
@@ -71,6 +76,8 @@ class GeminiService:
                 3. {selected_guidelines[1]}
                 4. {selected_guidelines[2]}
                 5. Ensure questions don't overlap in content or approach
+                6. RANDOMIZE THE ANSWER POSITIONS: Vary the correct_index across all 4 positions (0, 1, 2, 3)
+                7. Do NOT cluster answers at position 0 - spread them evenly across all positions
                 """
         else:
             return []
