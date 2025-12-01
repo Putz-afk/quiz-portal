@@ -119,10 +119,7 @@ export default function App() {
 
       case 'ANSWER_ACK':
         setHasSubmitted(true);
-        // Note: data.correct might be null here if we want extra security, 
-        // but for now we trust the client logic to hide it until reveal.
-        // If you want 100% security, the server shouldn't send 'correct' here either.
-        setRevealResult({ correct: data.correct });
+        // Don't reveal result yet - wait for ROUND_REVEAL when all players answered
         break;
 
       case 'ROUND_REVEAL':
@@ -139,6 +136,9 @@ export default function App() {
                 explanation: data.explanation
             };
         });
+        
+        // Now calculate if player's answer was correct
+        setRevealResult({ correct: selectedOption === data.correct_index });
         break;
         
       case 'GAME_OVER':
