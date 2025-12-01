@@ -1,11 +1,14 @@
-/* index.css - theme variables + light-base, dark overrides */
+/* index.css — Light-mode only (forced) */
 
+/* Force browsers to use light UI (scrollbars, inputs, etc.) */
 :root {
-  /* Theme tokens (light mode base) */
+  color-scheme: light;
+
+  /* Light theme tokens */
   --bg: #ffffff;
   --card-bg: #ffffff;
   --text: #213547;
-  --muted: #6b7280;         /* gray-500 */
+  --muted: #6b7280;
   --primary: #646cff;
   --primary-600: #535bf2;
   --btn-bg: #f9f9f9;
@@ -26,45 +29,34 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Dark mode overrides */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #242424;
-    --card-bg: #121212;
-    --text: rgba(255,255,255,0.87);
-    --muted: rgba(255,255,255,0.6);
-    --primary: #646cff;
-    --primary-600: #747bff;
-    --btn-bg: #1a1a1a;
-    --btn-text: rgba(255,255,255,0.95);
-    --surface-contrast: rgba(255,255,255,0.04);
-  }
-}
+/* No dark-mode overrides at all — completely removed */
 
-/* Apply page-level defaults to body (not :root) */
+/* Page defaults */
 html, body {
   height: 100%;
   margin: 0;
   background-color: var(--bg);
-  color: var(--text);                 /* <--- default text color */
+  color: var(--text);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Utility: ensure your app root uses variables reliably */
+/* App root */
 .quiz-app-root {
-  color: var(--text);                 /* ensure card text inherits correctly */
+  color: var(--text);
   background: transparent;
 }
 
-/* Basic elements using tokens */
+/* Basic elements */
 a {
   color: var(--primary);
   font-weight: 500;
   text-decoration: inherit;
 }
-a:hover { color: var(--primary-600); }
+a:hover {
+  color: var(--primary-600);
+}
 
 button {
   border-radius: 8px;
@@ -78,21 +70,20 @@ button {
   cursor: pointer;
   transition: border-color 0.25s, background-color 0.25s;
 }
-button:hover { border-color: var(--primary); }
+button:hover {
+  border-color: var(--primary);
+}
 button:focus, button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
-h1 { font-size: 3.2em; line-height: 1.1; }
-
-/* Small helpers used by the app */
-.quiz-card {
-  background: var(--card-bg);
-  color: var(--text);            /* primary fix: card and its children inherit text color */
-  border-radius: 16px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
 }
 
+/* Cards */
+.quiz-card,
 .quiz-game-card {
   background: var(--card-bg);
   color: var(--text);
@@ -100,6 +91,10 @@ h1 { font-size: 3.2em; line-height: 1.1; }
   box-shadow: 0 10px 25px rgba(0,0,0,0.08);
 }
 
-/* If you need a stronger override for very stubborn third-party rules */
-.quiz-card, .quiz-card * { color: var(--text) !important; }
-.quiz-game-card, .quiz-game-card * { color: var(--text) !important; }
+/* Strong overrides (if needed) */
+.quiz-card, .quiz-card * {
+  color: var(--text) !important;
+}
+.quiz-game-card, .quiz-game-card * {
+  color: var(--text) !important;
+}
