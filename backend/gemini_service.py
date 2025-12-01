@@ -66,12 +66,11 @@ class GeminiService:
                 Create {count} diverse trivia questions about: "{input_text}".
                 
                 Guidelines:
-                1. Language: Strictly in **Bahasa Indonesia**
-                2. Content: Prioritize interesting, unusual, and fun facts
-                3. {selected_guidelines[0]}
-                4. {selected_guidelines[1]}
-                5. {selected_guidelines[2]}
-                6. Ensure questions don't overlap in content or approach
+                1. Content: Prioritize interesting, unusual, and fun facts
+                2. {selected_guidelines[0]}
+                3. {selected_guidelines[1]}
+                4. {selected_guidelines[2]}
+                5. Ensure questions don't overlap in content or approach
                 """
         else:
             return []

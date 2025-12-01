@@ -38,7 +38,8 @@ export default function App() {
   const [revealResult, setRevealResult] = useState(null); 
   const [myScore, setMyScore] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
-  const [submittedAnswer, setSubmittedAnswer] = useState(null); // Track submitted answer for reveal 
+  const [submittedAnswer, setSubmittedAnswer] = useState(null); // Track submitted answer for reveal
+  const submittedAnswerRef = useRef(null); // Use ref to avoid closure issues 
 
   const socketRef = useRef(null);
 
@@ -117,6 +118,7 @@ export default function App() {
         setRevealResult(null);
         setSelectedOption(null);
         setSubmittedAnswer(null);
+        submittedAnswerRef.current = null;
         break;
 
       case 'ANSWER_ACK':
@@ -129,6 +131,13 @@ export default function App() {
         setPlayers(data.players);
         updateMyStatus(data.players);
         
+        // DEBUG
+        console.log('ROUND_REVEAL received:', {
+          submittedAnswer: submittedAnswerRef.current,
+          correct_index: data.correct_index,
+          isCorrect: submittedAnswerRef.current === data.correct_index
+        });
+        
         // --- SECURITY UPDATE: Merge the answer key into the question ---
         setCurrentQuestion(prev => {
             if (!prev) return prev;
@@ -139,8 +148,8 @@ export default function App() {
             };
         });
         
-        // Now calculate if player's answer was correct using the stored submitted answer
-        setRevealResult({ correct: submittedAnswer === data.correct_index });
+        // Now calculate if player's answer was correct using the ref value
+        setRevealResult({ correct: submittedAnswerRef.current === data.correct_index });
         break;
         
       case 'GAME_OVER':
@@ -172,8 +181,10 @@ export default function App() {
 
   const submitAnswer = (index) => {
     if (hasSubmitted) return; 
+    console.log('Submitting answer:', index);
     setSelectedOption(index);
     setSubmittedAnswer(index); // Store for reveal
+    submittedAnswerRef.current = index; // Also store in ref to avoid closure issues
     socketRef.current.send(JSON.stringify({
       action: "SUBMIT_ANSWER",
       payload: { index }
