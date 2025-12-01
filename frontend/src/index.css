@@ -92,9 +92,9 @@ h1 {
 }
 
 /* Strong overrides (if needed) */
-.quiz-card, .quiz-card * {
+/* .quiz-card, .quiz-card * {
   color: var(--text) !important;
 }
 .quiz-game-card, .quiz-game-card * {
   color: var(--text) !important;
-}
+} */
