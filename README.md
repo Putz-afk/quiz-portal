@@ -4,7 +4,7 @@
 
 ## 🌟 Key Features
 
-* **Generative AI Engine:** Integrated with **Google Gemini 1.5 Flash** to generate unique, context-aware trivia questions in Bahasa Indonesia.
+* **Generative AI Engine:** Integrated with **Google Gemini 2.5 Flash** to generate unique, context-aware trivia questions in Bahasa Indonesia.
 * **Real-Time Multiplayer:** Full WebSocket implementation for sub-second state synchronization between Host and Clients.
 * **Robust Game State Management:** Handles edge cases like player disconnections, late joiners, and automatic Host migration to prevent soft-locks.
 * **Democratic Gameplay:** "Wait-for-all" answering logic and synchronized reveal phases to ensure fairness.
