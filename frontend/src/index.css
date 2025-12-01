@@ -1,11 +1,24 @@
+/* index.css - theme variables + light-base, dark overrides */
+
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  /* Theme tokens (light mode base) */
+  --bg: #ffffff;
+  --card-bg: #ffffff;
+  --text: #213547;
+  --muted: #6b7280;         /* gray-500 */
+  --primary: #646cff;
+  --primary-600: #535bf2;
+  --btn-bg: #f9f9f9;
+  --btn-text: #213547;
+  --surface-contrast: rgba(0,0,0,0.06);
+
+  /* Layout / typography */
+  --radius: 12px;
+  --font-sans: system-ui, Avenir, Helvetica, Arial, sans-serif;
+
+  font-family: var(--font-sans);
   line-height: 1.5;
   font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -13,27 +26,45 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Dark mode overrides */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #242424;
+    --card-bg: #121212;
+    --text: rgba(255,255,255,0.87);
+    --muted: rgba(255,255,255,0.6);
+    --primary: #646cff;
+    --primary-600: #747bff;
+    --btn-bg: #1a1a1a;
+    --btn-text: rgba(255,255,255,0.95);
+    --surface-contrast: rgba(255,255,255,0.04);
+  }
+}
+
+/* Apply page-level defaults to body (not :root) */
+html, body {
+  height: 100%;
+  margin: 0;
+  background-color: var(--bg);
+  color: var(--text);                 /* <--- default text color */
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Utility: ensure your app root uses variables reliably */
+.quiz-app-root {
+  color: var(--text);                 /* ensure card text inherits correctly */
+  background: transparent;
+}
+
+/* Basic elements using tokens */
 a {
+  color: var(--primary);
   font-weight: 500;
-  color: #646cff;
   text-decoration: inherit;
 }
-a:hover {
-  color: #535bf2;
-}
-
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
+a:hover { color: var(--primary-600); }
 
 button {
   border-radius: 8px;
@@ -42,27 +73,33 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: var(--btn-bg);
+  color: var(--btn-text);
   cursor: pointer;
-  transition: border-color 0.25s;
+  transition: border-color 0.25s, background-color 0.25s;
 }
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
+button:hover { border-color: var(--primary); }
+button:focus, button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+h1 { font-size: 3.2em; line-height: 1.1; }
+
+/* Small helpers used by the app */
+.quiz-card {
+  background: var(--card-bg);
+  color: var(--text);            /* primary fix: card and its children inherit text color */
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
 }
+
+.quiz-game-card {
+  background: var(--card-bg);
+  color: var(--text);
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+
+/* If you need a stronger override for very stubborn third-party rules */
+.quiz-card, .quiz-card * { color: var(--text) !important; }
+.quiz-game-card, .quiz-game-card * { color: var(--text) !important; }

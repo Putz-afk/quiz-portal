@@ -235,8 +235,8 @@ export default function App() {
 
   if (view === 'login') {
     return (
-      <div style={styles.container}>
-        <div style={styles.card}>
+      <div style={styles.container} className="quiz-app-root">
+        <div style={styles.card} className="quiz-card">
           <h1 style={styles.title}><Zap size={32} /> QuizPortal</h1>
           <p style={styles.subtitle}>Enter your name to start</p>
           <input 
@@ -266,8 +266,8 @@ export default function App() {
 
   if (view === 'lobby') {
     return (
-      <div style={styles.container}>
-        <div style={styles.card}>
+      <div style={styles.container} className="quiz-app-root"> 
+        <div style={styles.card} className="quiz-card">
           <div style={styles.header}>
             <h2 style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, margin: '0 0 10px 0', color: '#333'}}>
               Room: {roomCode}
@@ -315,8 +315,8 @@ export default function App() {
 
   if (view === 'game') {
     return (
-      <div style={styles.container}>
-        <div style={styles.gameCard}>
+      <div style={styles.container} className="quiz-app-root">
+        <div style={styles.gameCard} className="quiz-game-card">
           {renderPlayerStrip()}
           
           <div style={styles.gameHeader}>
@@ -402,8 +402,8 @@ export default function App() {
     const rest = sortedPlayers.slice(3);
 
     return (
-      <div style={styles.container}>
-        <div style={styles.card}>
+      <div style={styles.container} className="quiz-app-root">
+        <div style={styles.card} className="quiz-card">
           <h1 style={styles.title}><Trophy size={32} color="gold" /> Final Results</h1>
           
           {/* PODIUM */}
