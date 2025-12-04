@@ -1,0 +1,49 @@
+name: Auto-Deploy Frontend
+
+# Only run this when we accept changes into 'main'
+on:
+  push:
+    branches: [ "main" ]
+
+# Grant permission to write to your repository (to update the website)
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install and Build
+        run: |
+          cd frontend
+          npm install
+          npm run build
+        # We don't need 'npm run deploy' anymore because the next step does it!
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: frontend/dist # The folder the build script generates
+          branch: gh-pages # The branch the website lives on
+```
+
+---
+
+### Phase 4: See it in Action (The Simulation)
+
+Now, let's simulate a "Day in the Life of a DevOps Engineer."
+
+**1. Save and Push your Experiment:**
+Run these commands in your `learning-cicd` branch:
+```bash
+git add .
+git commit -m "Added CI/CD workflows and a dummy test"
+git push -u origin learning-cicd
